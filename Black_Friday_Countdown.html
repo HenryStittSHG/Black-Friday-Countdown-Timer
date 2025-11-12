@@ -1,15 +1,182 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Countdown Timer</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Countdown</title>
+  <meta name="theme-color" content="#ffffff"/>
+
   <style>
-    body { margin: 0; font-family: 'Inter', sans-serif; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Lato, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: #f6f6f6;
+    }
+
+    /* Main container: horizontally centered, stuck to top */
+    #rija\.io-main-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;         /* center horizontally */
+      justify-content: flex-start; /* stick to top */
+      gap: 40px;
+      width: 100%;
+      /* Optional: keep background filling iframe. Remove if not needed. */
+      min-height: 100vh;
+      background: #f6f6f6 center/cover no-repeat;
+    }
+
+    #rija\.io-message-container h1 {
+      color: #000;
+      font-weight: 300;
+      font-size: 48px;
+      text-align: center;
+      margin: 0;
+    }
+
+    #rija\.io-timer-container {
+      transition: .2s all ease-in-out;
+      padding: 0; /* no extra vertical offset */
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      z-index: 2;
+    }
+
+    .rija-box {
+      width: 100px;
+      height: 100px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      border-radius: 4px;
+    }
+
+    .rija-value {
+      color: #000000;
+      font-weight: 800;
+      font-size: 60px;
+      line-height: 1;
+    }
+
+    .rija-label {
+      color: #031b4d;
+      font-weight: 100;
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    @media (max-width: 600px) {
+      #rija\.io-timer-container .rija-box {
+        width: 50px !important;
+      }
+      .rija-value { font-size: 36px; }
+      .rija-label { font-size: 14px; }
+    }
   </style>
 </head>
 <body>
-  <div id="rija.io-countdown-6914572acbe7325b1c9680ea"></div>
-  <script src="https://app.rija.io/countdown/static/rija.io.min.js"></script>
+  <div id="rija.io-countdown-6914788bcbe7325b1c968416">
+    <div id="rija.io-main-container">
+      <div id="rija.io-message-container" style="z-index:2;">
+        <!-- Optional heading -->
+        <h1></h1>
+      </div>
+
+      <div id="rija.io-timer-container">
+        <div class="rija-box">
+          <span id="rija.io-days" class="rija-value">0</span>
+          <span class="rija-label" id="rija.io-days-label">days</span>
+        </div>
+        <div class="rija-box">
+          <span id="rija.io-hours" class="rija-value">0</span>
+          <span class="rija-label" id="rija.io-hours-label">hours</span>
+        </div>
+        <div class="rija-box">
+          <span id="rija.io-minutes" class="rija-value">0</span>
+          <span class="rija-label" id="rija.io-minutes-label">minutes</span>
+        </div>
+        <div class="rija-box">
+          <span id="rija.io-seconds" class="rija-value">0</span>
+          <span class="rija-label" id="rija.io-seconds-label">seconds</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      // Target: 09:00 UTC on 27 Nov 2025
+      // Use an ISO string with 'Z' to force UTC.
+      const target = new Date('2025-11-27T09:00:00Z').getTime();
+
+      // Element references
+      const elDays    = document.getElementById('rija.io-days');
+      const elHours   = document.getElementById('rija.io-hours');
+      const elMinutes = document.getElementById('rija.io-minutes');
+      const elSeconds = document.getElementById('rija.io-seconds');
+
+      const lblDays    = document.getElementById('rija.io-days-label');
+      const lblHours   = document.getElementById('rija.io-hours-label');
+      const lblMinutes = document.getElementById('rija.io-minutes-label');
+      const lblSeconds = document.getElementById('rija.io-seconds-label');
+
+      function pad2(n) { return n.toString().padStart(2, '0'); }
+      function plural(n, singular, plural) { return n === 1 ? singular : plural; }
+
+      function update() {
+        const now = Date.now();
+        let delta = Math.max(0, target - now); // never negative
+
+        const secondsTotal = Math.floor(delta / 1000);
+        const days    = Math.floor(secondsTotal / 86400);
+        const hours   = Math.floor((secondsTotal % 86400) / 3600);
+        const minutes = Math.floor((secondsTotal % 3600) / 60);
+        const seconds = secondsTotal % 60;
+
+        // Update numbers (hours/minutes/seconds padded for consistency)
+        elDays.textContent    = String(days);
+        elHours.textContent   = pad2(hours);
+        elMinutes.textContent = pad2(minutes);
+        elSeconds.textContent = pad2(seconds);
+
+        // Update labels (optional pluralization)
+        if (lblDays)    lblDays.textContent    = plural(days, 'day', 'days');
+        if (lblHours)   lblHours.textContent   = plural(hours, 'hour', 'hours');
+        if (lblMinutes) lblMinutes.textContent = plural(minutes, 'minute', 'minutes');
+        if (lblSeconds) lblSeconds.textContent = plural(seconds, 'second', 'seconds');
+
+        // Stop ticking at zero
+        if (secondsTotal === 0) {
+          clearInterval(timer);
+        }
+      }
+
+      // Run immediately and then every second
+      update();
+      const timer = setInterval(update, 1000);
+
+      // Optional: if the page is hidden, reduce work (saves battery)
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          // slow down updates while hidden (optional)
+          clearInterval(timer);
+          setTimeout(() => {
+            update();
+            setInterval(update, 1000);
+          }, 500);
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
